@@ -1,26 +1,60 @@
-from urllib.parse import urlparse
+from __future__ import annotations
 import requests
 import logging
-from clients.client import Client, CLIENT_DEFAULTS
+from clients.client import Client
+from clients.infura import InfuraClient
+from clients.lighthouse import LighthouseClient
+from clients.prysm import PrysmClient
 
+CLIENT_DEFAULTS = {
+  "prysm": {
+    "endpoint": "http://localhost:3500",
+    "test_path": "/eth/v1/node/version",
+    "constructor": PrysmClient,
+  },
+  "lighthouse": {
+    "endpoint": "http://localhost:5052",
+    "test_path": "/eth/v1alpha1/beacon/chainhead",
+    "constructor": LighthouseClient
+  },
+  "infura": {
+    "constructor": InfuraClient,
+  }
+}
+
+
+def new_client_from_name(name: str) -> Client:
+  config = CLIENT_DEFAULTS.get("name")
+  if config is None:
+    logging.error("No client named {}".format(name))
+    raise Exception("No client named {}".format(name))
+
+  return config["constructor"]()
 
 class Validator:
-  index: int
   public_key: str
   client: Client
 
-  def __init__(self, index: int, public_key: str, beacon_chain_endpoint: str = None) -> None:
-    self.index = index
+  def __init__(self, public_key: str, beacon_chain_endpoint: str = None, client_type: str = None) -> None:
     self.public_key = public_key
 
     if beacon_chain_endpoint is None:
       self.client = self._autodetect_beaconchain_client()
+    elif client_type == "infura":
+      self.client = InfuraClient(beacon_chain_endpoint)
+    elif client_type == "lighthouse":
+      self.client = LighthouseClient(beacon_chain_endpoint)
+    elif client_type == "prysm":
+      self.client = PrysmClient(beacon_chain_endpoint)
     else:
-      self.client = Client(beacon_chain_endpoint)
+      raise Exception("Invalid client_type {}".format(client_type))
 
   def _autodetect_beaconchain_client(self) -> Client:
     connect_to = None
     for client, config in CLIENT_DEFAULTS.items():
+      if client == "infura":
+        continue
+
       try:
         r = requests.get(config.get("endpoint") + config.get("test_path"))
         if r.status_code == 200:
@@ -38,5 +72,8 @@ class Validator:
       logging.error("Client {} does not exist in default client config, possible options are {}".format(connect_to, list(CLIENT_DEFAULTS.keys())))
       return None
 
-    return Client.new_client_from_name(connect_to)
+    return new_client_from_name(connect_to)
+
+  def balance_at_epoch(self, epoch: int) -> int:
+    return self.client.validator_balance(epoch, self.public_key)
 
