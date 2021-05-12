@@ -1,3 +1,5 @@
+from datetime import datetime
+from utils.time import eth2_epoch_to_timestamp
 import logging
 
 import requests
@@ -13,7 +15,7 @@ class LighthouseClient(Client):
     super().__init__(endpoint)
     self.name = "lighthouse"
 
-  def validator_balance(self, epoch: int, public_key: str):
+  def validator_balance(self, epoch: int, public_key: str) -> tuple[int, float]:
     if epoch < 0:
       raise Exception("Epoch must be positive")
 
@@ -38,4 +40,7 @@ class LighthouseClient(Client):
       logging.info("No validator balance for {} at epoch {}".format(public_key, str(epoch)))
       return 0
 
-    return data[0].get("balance")
+    date = datetime.fromtimestamp(eth2_epoch_to_timestamp(epoch)).strftime("%d-%m-%Y")
+    price = self.ethPriceFetcher.get_eth_usd_price_on_day(date)
+
+    return data[0].get("balance"), price
