@@ -1,7 +1,6 @@
 from localdb import SQLiteDB
 
 if __name__ == '__main__':
-    print('hello')
     db = SQLiteDB('test.db')
     test_obj_1 = {
         'key': 'eth2hash',
@@ -21,3 +20,4 @@ if __name__ == '__main__':
     }
     db.save([test_obj_1, test_obj_2])
     print(db.load_view('eth2hash', '2021-05-09', '2021-05-10'))
+    print(db.last_saved('eth2hash'))

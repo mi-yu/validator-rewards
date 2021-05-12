@@ -43,14 +43,14 @@ class SQLiteDB(DB):
             return None
         else:
             query = f"SELECT * from {key} WHERE {date_col} BETWEEN '{start}' AND '{end}';"
-            print(query)
             cursor = self.conn.execute(query)
-            result = cursor.fetchall()
-            return result
+            return cursor.fetchall()
 
-    def last_saved(self, key):
+    def last_saved(self, key, date_col: str = 'estimated_timestamp'):
         if not self._key_exists(key):
             logging.info(f'key not found in db: {key}')
             return None
         else:
-            return None
+            query = f"SELECT * from {key} ORDER BY {date_col} DESC;"
+            cursor = self.conn.execute(query)
+            return cursor.fetchone()
