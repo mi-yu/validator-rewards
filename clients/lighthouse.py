@@ -1,6 +1,5 @@
 from datetime import datetime
 from utils.time import eth2_epoch_to_timestamp
-from core.coingecko import EthPriceFetcher
 import logging
 
 import requests
