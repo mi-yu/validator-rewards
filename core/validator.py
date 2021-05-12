@@ -1,6 +1,9 @@
-from __future__ import annotations
+from core.constants import EPOCHS_PER_DAY, GENESIS_TIMESTAMP, SECONDS_PER_SLOT, SLOTS_PER_EPOCH
 import requests
 import logging
+from multiprocessing import Pool
+from datetime import datetime
+from utils.time import timestamp_to_eth2_epoch
 from clients.client import Client
 from clients.infura import InfuraClient
 from clients.lighthouse import LighthouseClient
@@ -21,7 +24,6 @@ CLIENT_DEFAULTS = {
     "constructor": InfuraClient,
   }
 }
-
 
 def new_client_from_name(name: str) -> Client:
   config = CLIENT_DEFAULTS.get("name")
@@ -74,6 +76,13 @@ class Validator:
 
     return new_client_from_name(connect_to)
 
-  def balance_at_epoch(self, epoch: int) -> int:
-    return self.client.validator_balance(epoch, self.public_key)
+  def balances_at_dates(self, start_date: str, end_date: str):
+    start_ts = datetime.strptime(start_date, "%Y-%m-%d").timestamp()
+    end_ts = datetime.strptime(end_date, "%Y-%m-%d").timestamp()
+    start_epoch = timestamp_to_eth2_epoch(start_ts)
+    end_epoch = timestamp_to_eth2_epoch(end_ts)
+
+    with Pool(4) as p:
+      res = p.starmap(self.client.validator_balance, [(epoch, self.public_key) for epoch in range(start_epoch, end_epoch, EPOCHS_PER_DAY)])
+    return res
 
