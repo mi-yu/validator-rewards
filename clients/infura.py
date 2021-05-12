@@ -14,6 +14,9 @@ class InfuraClient(Client):
     self.name = "infura"
 
   def validator_balance(self, epoch: int, public_key: str):
+    if epoch < 0:
+      raise Exception("Epoch must be positive")
+
     slot_no = epoch * SLOTS_PER_EPOCH
     retries = 5
     logging.info("Fetching validator balance for {} at epoch {}...".format(public_key, epoch))
@@ -25,13 +28,12 @@ class InfuraClient(Client):
       if r.status_code == 200:
         break
       retries -= 1
-      logging.info("validator_balance request failed with code {} message {}, {} retries left".format(str(r.status_code), r.text, str(retries)))
+      logging.info("validator_balance request failed with code {}, {} retries left".format(str(r.status_code), str(retries)))
 
     if retries == 0:
       return 0
 
     data = r.json().get("data")
-    print(data)
     if not data or len(data) != 1:
       logging.info("No validator balance for {} at epoch {}".format(public_key, str(epoch)))
       return 0

@@ -82,7 +82,8 @@ class Validator:
     start_epoch = timestamp_to_eth2_epoch(start_ts)
     end_epoch = timestamp_to_eth2_epoch(end_ts)
 
-    with Pool(4) as p:
-      res = p.starmap(self.client.validator_balance, [(epoch, self.public_key) for epoch in range(start_epoch, end_epoch, EPOCHS_PER_DAY)])
-    return res
+    args = [(epoch, self.public_key) for epoch in range(start_epoch, end_epoch, EPOCHS_PER_DAY)]
+    with Pool(5) as p:
+      res = p.starmap(self.client.validator_balance, args)
+    return [(epoch, balance) for (epoch, _), balance in zip(args, res)]
 
