@@ -1,26 +1,56 @@
-import csv
-import db.DB
-
+import sqlite3
+from db import DB
+import logging
 
 # Validate fields before writing
-class CSVDB(DB):
+class SQLiteDB(DB):
     def __init__(self, filepath: str):
         super().__init__(filepath)
-        self.last_write = None
-    
-    def save(self, data_entries) -> None:
-        with open(self.location, 'w', newline='') as csvfile:
-            for data in data_entries:
-                fieldnames = self.schema.fields
-                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-                writer.writeheader()
-                writer.writerow(data)
+        self.last_write = {}
+        self.conn = sqlite3.connect(self.location)
 
-    def load_view(self, key, start, end):
-        with open(self.location, 'r', newline='') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                return row['key']
+    
+    # data_entries is a list of dictionaries with the field 'key' + whatever the schema requires
+    def save(self, data_entries) -> None:
+        cur = self.conn.cursor()
+        exclude_keys = {'key'}
+        for data in data_entries:
+            key = data['key']
+            save_data = {k: data[k] for k in set(list(data.keys())) - exclude_keys}
+            self.schema.validate(save_data)
+            
+            if not self._key_exists(key):
+                header = str(self.header()).replace("'", "")
+                cur.execute(f'''CREATE TABLE {key} {header}''')
+
+            values = tuple(save_data[k] for k in self.header())
+            cur.execute(f'''INSERT INTO {key} VALUES {values} ''')
+            self.conn.commit()
+
+    def _key_exists(self, key: str) -> bool:
+        """ This method seems to be working now"""
+        query = f"SELECT name from sqlite_master WHERE type='table' AND name='{key}';"
+        cursor = self.conn.execute(query)
+        result = cursor.fetchone()
+        if result == None:
+            return False
+        else:
+            return True 
+
+    def load_view(self, key: str, start: str, end: str, date_col: str = 'estimated_timestamp'):
+        if not self._key_exists(key):
+            logging.info(f'key not found in db: {key}')
+            return None
+        else:
+            query = f"SELECT * from {key} WHERE {date_col} BETWEEN '{start}' AND '{end}';"
+            print(query)
+            cursor = self.conn.execute(query)
+            result = cursor.fetchall()
+            return result
 
     def last_saved(self, key):
-        return self.last_write
+        if not self._key_exists(key):
+            logging.info(f'key not found in db: {key}')
+            return None
+        else:
+            return None
