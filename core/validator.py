@@ -85,5 +85,5 @@ class Validator:
     args = [(epoch, self.public_key) for epoch in range(start_epoch, end_epoch, EPOCHS_PER_DAY)]
     with Pool(5) as p:
       res = p.starmap(self.client.validator_balance, args)
-    return [(epoch, balance) for (epoch, _), balance in zip(args, res)]
+    return [(epoch, balance, price) for (epoch, _), (balance, price) in zip(args, res)]
 
