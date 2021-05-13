@@ -3,7 +3,7 @@ import logging
 from utils.time import eth2_epoch_to_timestamp
 import requests
 from clients.client import Client
-from core.constants import SLOTS_PER_EPOCH
+from core.constants import GWEI_PER_ETH, SLOTS_PER_EPOCH
 
 INFURA_ENDPOINTS = {
   "validator_balances": "/eth/v1/beacon/states/{}/validator_balances"
@@ -39,7 +39,7 @@ class InfuraClient(Client):
       logging.info("No validator balance for {} at epoch {}".format(public_key, str(epoch)))
       return 0
 
-    date = datetime.fromtimestamp(eth2_epoch_to_timestamp(epoch)).strftime("%d-%m-%Y")
-    price = self.ethPriceFetcher.get_eth_usd_price_on_day(date)
+    balance = int(data[0].get("balance")) / GWEI_PER_ETH
+    usd_value = self.eth_price_at_epoch(epoch) * balance
 
-    return data[0].get("balance"), price
+    return balance, usd_value
