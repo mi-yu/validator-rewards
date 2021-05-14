@@ -39,3 +39,6 @@ class DB():
 
     def last_saved(self, key):
         raise NotImplementedError('Call my subclass')
+
+    def is_processed(self, key, date):
+        raise NotImplementedError('Call my subclass')

@@ -4,10 +4,12 @@ import logging
 from multiprocessing import Pool
 from datetime import datetime
 from utils.time import timestamp_to_eth2_epoch
+from utils.time import eth2_epoch_to_db_date
 from clients.client import Client
 from clients.infura import InfuraClient
 from clients.lighthouse import LighthouseClient
 from clients.prysm import PrysmClient
+from db.db import DB
 
 CLIENT_DEFAULTS = {
   "prysm": {
@@ -76,13 +78,15 @@ class Validator:
 
     return new_client_from_name(connect_to)
 
-  def balances_at_dates(self, start_date: str, end_date: str):
+  def balances_at_dates(self, start_date: str, end_date: str, db: DB):
     start_ts = datetime.strptime(start_date, "%Y-%m-%d").timestamp()
     end_ts = datetime.strptime(end_date, "%Y-%m-%d").timestamp()
     start_epoch = timestamp_to_eth2_epoch(start_ts)
     end_epoch = timestamp_to_eth2_epoch(end_ts)
 
     args = [(epoch, self.public_key) for epoch in range(start_epoch, end_epoch, EPOCHS_PER_DAY)]
+    if db:
+      args = list(filter(lambda x: not db.is_processed(x[1], eth2_epoch_to_db_date(x[0], db.time_fmt)), args))
     with Pool(5) as p:
       res = p.starmap(self.client.validator_balance, args)
     return [(epoch, balance, price) for (epoch, _), (balance, price) in zip(args, res)]

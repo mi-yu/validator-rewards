@@ -54,3 +54,15 @@ class SQLiteDB(DB):
             query = f"SELECT * from key_{key} ORDER BY {date_col} DESC;"
             cursor = self.conn.execute(query)
             return cursor.fetchone()
+
+    def is_processed(self, key: str, date: str, date_col: str = 'estimated_timestamp') -> bool:
+        if not self._key_exists(key):
+            return False
+        else:
+            query = f"SELECT * from key_{key} WHERE {date_col} = '{date}';"
+            cursor = self.conn.execute(query)
+            result = cursor.fetchone()
+            if result == None:
+                return False
+            else:
+                return True
