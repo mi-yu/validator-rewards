@@ -1,5 +1,5 @@
 import sqlite3
-from db import DB
+from db.db import DB
 import logging
 
 # Validate fields before writing
@@ -21,15 +21,15 @@ class SQLiteDB(DB):
             
             if not self._key_exists(key):
                 header = str(self.header()).replace("'", "")
-                cur.execute(f'''CREATE TABLE {key} {header}''')
+                cur.execute(f'''CREATE TABLE key_{key} {header}''')
 
             values = tuple(save_data[k] for k in self.header())
-            cur.execute(f'''INSERT INTO {key} VALUES {values} ''')
+            cur.execute(f'''INSERT INTO key_{key} VALUES {values} ''')
             self.conn.commit()
 
     def _key_exists(self, key: str) -> bool:
         """ This method seems to be working now"""
-        query = f"SELECT name from sqlite_master WHERE type='table' AND name='{key}';"
+        query = f"SELECT name from sqlite_master WHERE type='table' AND name='key_{key}';"
         cursor = self.conn.execute(query)
         result = cursor.fetchone()
         if result == None:
@@ -42,7 +42,7 @@ class SQLiteDB(DB):
             logging.info(f'key not found in db: {key}')
             return None
         else:
-            query = f"SELECT * from {key} WHERE {date_col} BETWEEN '{start}' AND '{end}';"
+            query = f"SELECT * from key_{key} WHERE {date_col} BETWEEN '{start}' AND '{end}';"
             cursor = self.conn.execute(query)
             return cursor.fetchall()
 
@@ -51,6 +51,6 @@ class SQLiteDB(DB):
             logging.info(f'key not found in db: {key}')
             return None
         else:
-            query = f"SELECT * from {key} ORDER BY {date_col} DESC;"
+            query = f"SELECT * from key_{key} ORDER BY {date_col} DESC;"
             cursor = self.conn.execute(query)
             return cursor.fetchone()

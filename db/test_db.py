@@ -3,7 +3,7 @@ from localdb import SQLiteDB
 if __name__ == '__main__':
     db = SQLiteDB('test.db')
     test_obj_1 = {
-        'key': 'eth2hash',
+        'key': 'key_0x8001ffc81a8be963f40e418fe780b1c065f0a6d811a0f777bd2a77f9eeacb2f7bd47468dfebf8c0d574e49de53b94b29',
         'estimated_timestamp': '2021-05-10',
         'epoch': '102',
         'eth_balance': '43.21',
@@ -11,7 +11,7 @@ if __name__ == '__main__':
         'hist_usd_value': '1204.23'
     }
     test_obj_2 = {
-        'key': 'eth2hash',
+        'key': 'key_0x8001ffc81a8be963f40e418fe780b1c065f0a6d811a0f777bd2a77f9eeacb2f7bd47468dfebf8c0d574e49de53b94b29',
         'estimated_timestamp': '2021-05-11',
         'epoch': '57',
         'eth_balance': '43.21',

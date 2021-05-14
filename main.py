@@ -1,6 +1,9 @@
 import argparse
 import logging
 from core.validator import Validator
+from utils.time import eth2_epoch_to_db_date
+from db.db import DB_DEFAULT_DT_FMT
+from db.localdb import SQLiteDB
 logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
@@ -20,7 +23,14 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
   validators = [Validator(key, args.beacon_chain_endpoint, args.client_type) for key in args.public_keys]
+  db = SQLiteDB('rewards.db')
 
   for v in validators:
-    print(v.balances_at_dates(args.start_date, args.end_date))
-
+    response = v.balances_at_dates(args.start_date, args.end_date)
+    save_data = [{'epoch': ep, \
+                  'eth_balance': bal, \
+                  'hist_usd_per_eth': price, \
+                  'hist_usd_value': price * bal, \
+                  'estimated_timestamp': eth2_epoch_to_db_date(ep, DB_DEFAULT_DT_FMT), \
+                  'key': v.public_key[2:]} for ep, bal, price in response]
+    db.save(save_data)

@@ -26,6 +26,7 @@ class DB():
         if config == None:
             self.schema = Schema(DB_DEFAULT_SCHEMA)
             self.fields = DB_DEFAULT_SCHEMA.keys()
+            self.time_fmt = DB_DEFAULT_DT_FMT
 
     def header(self):
         return tuple(self.fields)
