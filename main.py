@@ -44,7 +44,7 @@ if __name__ == "__main__":
   handle = open(args.output_file, "w") if args.output_file else sys.stdout
   with handle as f:
     writer = csv.writer(f)
-    writer.writerow(["public_key", "date", "eth_balance", "usd_eth_price", "usd_value"])
+    writer.writerow(["public_key", "epoch", "date", "eth_balance", "usd_eth_price", "usd_value"])
     start_ts = datetime.strptime(args.start_date, "%Y-%m-%d")
     end_ts = datetime.strptime(args.end_date, "%Y-%m-%d")
     for v in validators:
