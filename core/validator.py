@@ -37,10 +37,12 @@ def new_client_from_name(name: str) -> Client:
 
 class Validator:
   public_key: str
+  concurrency: int
   client: Client
 
-  def __init__(self, public_key: str, beacon_chain_endpoint: str = None, client_type: str = None) -> None:
+  def __init__(self, public_key: str, beacon_chain_endpoint: str = None, client_type: str = None, concurrency: int = 5) -> None:
     self.public_key = public_key
+    self.concurrency = concurrency
 
     if beacon_chain_endpoint is None:
       self.client = self._autodetect_beaconchain_client()
@@ -83,11 +85,12 @@ class Validator:
     end_ts = datetime.strptime(end_date, "%Y-%m-%d").timestamp()
     start_epoch = timestamp_to_eth2_epoch(start_ts)
     end_epoch = timestamp_to_eth2_epoch(end_ts)
+    concurrency = 5 if self.client.name == "infura" else self.concurrency
 
     args = [(epoch, self.public_key) for epoch in range(start_epoch, end_epoch, EPOCHS_PER_DAY)]
     if db:
       args = list(filter(lambda x: not db.is_processed(x[1], eth2_epoch_to_db_date(x[0], db.time_fmt)), args))
-    with Pool(5) as p:
+    with Pool(concurrency) as p:
       res = p.starmap(self.client.validator_balance, args)
     return [(epoch, balance, price) for (epoch, _), (balance, price) in zip(args, res)]
 

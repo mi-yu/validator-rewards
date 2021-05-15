@@ -15,6 +15,7 @@ if __name__ == "__main__":
   parser.add_argument("--indices", type=str, nargs="+", default=[])
   parser.add_argument("--start-date", type=str, required=True)
   parser.add_argument("--end-date", type=str, required=True)
+  parser.add_argument("--concurrency", type=str, default=5)
   parser.add_argument("-v", "--verbose", help="increase output verbosity",
                     action="store_true")
   args = parser.parse_args()
