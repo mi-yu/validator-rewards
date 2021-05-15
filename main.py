@@ -22,6 +22,7 @@ if __name__ == "__main__":
   parser.add_argument("-v", "--verbose", help="increase output verbosity",
                     action="store_true")
   parser.add_argument("-o", "--output-file", type=str)
+  parser.add_argument("--db", type=str)
   parser.add_argument("-t", "--timing", action="store_true")
   args = parser.parse_args()
 
@@ -29,7 +30,8 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
   validators = [Validator(key, args.beacon_chain_endpoint, args.client_type, args.concurrency) for key in args.public_keys]
-  db = SQLiteDB('rewards.db')
+  db_path = "rewards.db" if not args.db else args.db
+  db = SQLiteDB(db_path)
 
   for v in validators:
     response = v.balances_at_dates(args.start_date, args.end_date, db)

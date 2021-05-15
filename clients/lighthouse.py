@@ -1,4 +1,5 @@
 from __future__ import annotations
+from core.coingecko import EthPriceFetcher
 from datetime import datetime
 from utils.time import eth2_epoch_to_timestamp
 import logging
@@ -20,6 +21,8 @@ class LighthouseClient(Client):
     if epoch < 0:
       raise Exception("Epoch must be positive")
 
+    eth_price = self.eth_price_at_epoch(epoch)
+
     slot_no = epoch * SLOTS_PER_EPOCH
     retries = 5
     logging.info("Fetching validator balance for {} at epoch {}...".format(public_key, epoch))
@@ -34,13 +37,13 @@ class LighthouseClient(Client):
       logging.info("validator_balance request failed with code {}, {} retries left".format(str(r.status_code), str(retries)))
 
     if retries == 0:
-      return 0
+      return 0, eth_price
 
     data = r.json().get("data")
     if not data or len(data) != 1:
       logging.info("No validator balance for {} at epoch {}".format(public_key, str(epoch)))
-      return 0
+      return 0, eth_price
 
     balance = int(data[0].get("balance")) / GWEI_PER_ETH
 
-    return balance, self.eth_price_at_epoch(epoch)
+    return balance, eth_price
