@@ -1,4 +1,7 @@
 import argparse
+from datetime import datetime
+import sys
+import csv
 import logging
 from core.validator import Validator
 from utils.time import eth2_epoch_to_db_date
@@ -18,6 +21,7 @@ if __name__ == "__main__":
   parser.add_argument("--concurrency", type=str, default=5)
   parser.add_argument("-v", "--verbose", help="increase output verbosity",
                     action="store_true")
+  parser.add_argument("-o", "--output-file", type=str)
   args = parser.parse_args()
 
   if args.verbose:
@@ -35,3 +39,15 @@ if __name__ == "__main__":
                   'estimated_timestamp': eth2_epoch_to_db_date(ep, db.time_fmt), \
                   'key': v.public_key} for ep, bal, price in response]
     db.save(save_data)
+
+  handle = open(args.output_file, "w") if args.output_file else sys.stdout
+  with handle as f:
+    writer = csv.writer(f)
+    writer.writerow(["public_key", "date", "eth_balance", "usd_eth_price", "usd_value"])
+    start_ts = datetime.strptime(args.start_date, "%Y-%m-%d")
+    end_ts = datetime.strptime(args.end_date, "%Y-%m-%d")
+    for v in validators:
+      data = db.load_view(v.public_key, start_ts, end_ts)
+      for row in data:
+        writer.writerow([v.public_key] + list(row))
+

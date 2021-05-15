@@ -42,6 +42,5 @@ class LighthouseClient(Client):
       return 0
 
     balance = int(data[0].get("balance")) / GWEI_PER_ETH
-    usd_value = self.eth_price_at_epoch(epoch) * balance
 
-    return balance, usd_value
+    return balance, self.eth_price_at_epoch(epoch)
