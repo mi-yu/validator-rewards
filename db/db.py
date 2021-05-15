@@ -20,7 +20,6 @@ DB_DEFAULT_SCHEMA = {
 DB_DEFAULT_DT_FMT = '%Y-%m-%d'
 
 class DB():
-    # Location can either be a file path or some other network endpoint
     def __init__(self, location: str, config = None):
         self.location = location
         if config == None:
@@ -31,14 +30,14 @@ class DB():
     def header(self):
         return tuple(self.fields)
 
-    def save(self, key, data) -> None:
+    def save(self, key: str, data: list):
         raise NotImplementedError('Call my Subclass')
 
-    def load_view(self, key, start, end):
+    def load_view(self, key: str, start: str, end: str):
         raise NotImplementedError('Call my subclass')
 
-    def last_saved(self, key):
+    def last_saved(self, key: str):
         raise NotImplementedError('Call my subclass')
 
-    def is_processed(self, key, date):
+    def is_processed(self, key: str, date: str):
         raise NotImplementedError('Call my subclass')
