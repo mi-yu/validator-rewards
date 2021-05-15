@@ -10,6 +10,7 @@ from db.localdb import SQLiteDB
 logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
+  start = datetime.now()
   parser = argparse.ArgumentParser()
 
   parser.add_argument("--client-type", type=str)
@@ -18,16 +19,17 @@ if __name__ == "__main__":
   parser.add_argument("--indices", type=str, nargs="+", default=[])
   parser.add_argument("--start-date", type=str, required=True)
   parser.add_argument("--end-date", type=str, required=True)
-  parser.add_argument("--concurrency", type=str, default=5)
+  parser.add_argument("--concurrency", type=int, default=5)
   parser.add_argument("-v", "--verbose", help="increase output verbosity",
                     action="store_true")
   parser.add_argument("-o", "--output-file", type=str)
+  parser.add_argument("-t", "--timing", action="store_true")
   args = parser.parse_args()
 
   if args.verbose:
     logging.basicConfig(level=logging.INFO)
 
-  validators = [Validator(key, args.beacon_chain_endpoint, args.client_type) for key in args.public_keys]
+  validators = [Validator(key, args.beacon_chain_endpoint, args.client_type, args.concurrency) for key in args.public_keys]
   db = SQLiteDB('rewards.db')
 
   for v in validators:
@@ -50,4 +52,8 @@ if __name__ == "__main__":
       data = db.load_view(v.public_key, start_ts, end_ts)
       for row in data:
         writer.writerow([v.public_key] + list(row))
+
+  elapsed = datetime.now().timestamp() - start.timestamp()
+  if args.timing:
+    print(elapsed)
 

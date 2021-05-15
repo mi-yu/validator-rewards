@@ -90,6 +90,8 @@ class Validator:
     args = [(epoch, self.public_key) for epoch in range(start_epoch, end_epoch, EPOCHS_PER_DAY)]
     if db:
       args = list(filter(lambda x: not db.is_processed(x[1], eth2_epoch_to_db_date(x[0], db.time_fmt)), args))
+
+    logging.info("Using concurrency = {}".format(self.concurrency))
     with Pool(concurrency) as p:
       res = p.starmap(self.client.validator_balance, args)
     return [(epoch, balance, price) for (epoch, _), (balance, price) in zip(args, res)]
