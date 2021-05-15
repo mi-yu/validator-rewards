@@ -5,7 +5,6 @@ import csv
 import logging
 from core.validator import Validator
 from utils.time import eth2_epoch_to_db_date
-# from db.db import DB_DEFAULT_DT_FMT
 from db.localdb import SQLiteDB
 logging.basicConfig(level=logging.INFO)
 
